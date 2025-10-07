@@ -1,0 +1,242 @@
+# Release Configuration and Deployment Scripts
+# 
+# This directory contains optimized build configurations, deployment scripts,
+# and automation for production releases of the P2P File Converter.
+
+# Cargo.toml - Optimized for production builds
+[package]
+name = "p2p-file-converter"
+version = "1.0.0"
+edition = "2021"
+authors = ["P2P Converter Team <team@p2p-converter.org>"]
+description = "High-performance peer-to-peer file converter and transfer system"
+documentation = "https://docs.rs/p2p-file-converter"
+repository = "https://github.com/p2p-converter/p2p-file-converter"
+license = "MIT"
+keywords = ["p2p", "file-conversion", "networking", "pdf", "distributed"]
+categories = ["network-programming", "command-line-utilities", "multimedia"]
+readme = "README.md"
+exclude = [
+    "tests/fixtures/*",
+    "benches/data/*",
+    "docs/assets/*",
+    ".github/*",
+    "scripts/*",
+]
+
+[[bin]]
+name = "p2p-converter"
+path = "src/main.rs"
+
+[lib]
+name = "p2p_file_converter"
+path = "src/lib.rs"
+
+[dependencies]
+# Core async runtime
+tokio = { version = "1.35", features = [
+    "full", "tracing", "parking_lot", "rt-multi-thread", "macros", "signal"
+] }
+
+# Networking and P2P
+libp2p = { version = "0.53", features = [
+    "tcp", "noise", "yamux", "identify", "ping", "mdns", "kad", "request-response"
+] }
+libp2p-swarm = "0.44"
+libp2p-core = "0.41"
+
+# File format handling
+pdf = "0.8"
+printpdf = "0.6"
+pdf-extract = "0.7"
+
+# CLI and configuration
+clap = { version = "4.4", features = ["derive", "color", "suggestions", "wrap_help"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-appender = "0.2"
+
+# Performance and compression
+flate2 = "1.0"
+lz4_flex = "0.11"
+num_cpus = "1.16"
+
+# Progress and UX
+indicatif = "0.17"
+console = "0.15"
+
+# System integration
+dirs = "5.0"
+which = "5.0"
+
+# Security
+ring = "0.17"
+rustls = "0.21"
+
+# Development dependencies
+[dev-dependencies]
+tempfile = "3.8"
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+tokio-test = "0.4"
+mockall = "0.12"
+serial_test = "3.0"
+
+# Build optimization profiles
+[profile.dev]
+opt-level = 0
+debug = true
+split-debuginfo = "unpacked"
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = "unwind"
+incremental = true
+codegen-units = 256
+rpath = false
+
+[profile.release]
+opt-level = 3
+debug = false
+split-debuginfo = "packed"
+debug-assertions = false
+overflow-checks = false
+lto = true
+panic = "abort"
+incremental = false
+codegen-units = 1
+rpath = false
+strip = "symbols"
+
+[profile.production]
+inherits = "release"
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[profile.size-optimized]
+inherits = "release"
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[profile.bench]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = true
+incremental = false
+codegen-units = 1
+
+# Feature flags for conditional compilation
+[features]
+default = ["full"]
+full = [
+    "cli", "conversion", "networking", "compression", "metrics", "progress"
+]
+cli = ["clap"]
+conversion = ["pdf", "printpdf", "pdf-extract"]
+networking = ["libp2p"]
+compression = ["flate2", "lz4_flex"]
+metrics = ["serde_json"]
+progress = ["indicatif", "console"]
+minimal = []
+
+# Platform-specific dependencies
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+nix = "0.27"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winuser", "processthreadsapi"] }
+windows = { version = "0.52", features = ["Win32_System_ProcessStatus"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.9"
+
+# Workspace configuration (for multi-crate projects)
+[workspace]
+members = [
+    "crates/p2p-core",
+    "crates/file-converter", 
+    "crates/networking",
+    "tools/benchmarks",
+    "tools/testing",
+]
+resolver = "2"
+
+# Metadata for package managers
+[package.metadata.deb]
+maintainer = "P2P Converter Team <team@p2p-converter.org>"
+copyright = "2025, P2P Converter Team"
+license-file = ["LICENSE", "4"]
+extended-description = """
+A high-performance, peer-to-peer file converter that enables distributed
+file format conversion and transfer without requiring a central server.
+Features include text-to-PDF conversion, robust error handling, and
+secure encrypted communication between peers.
+"""
+depends = "$auto"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/p2p-converter", "usr/bin/", "755"],
+    ["README.md", "usr/share/doc/p2p-converter/", "644"],
+    ["config/default.toml", "etc/p2p-converter/", "644"],
+    ["systemd/p2p-converter.service", "lib/systemd/system/", "644"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/p2p-converter", dest = "/usr/bin/p2p-converter", mode = "755" },
+    { source = "README.md", dest = "/usr/share/doc/p2p-converter/README.md", mode = "644" },
+    { source = "config/default.toml", dest = "/etc/p2p-converter/default.toml", mode = "644" },
+]
+
+# Benchmarking configuration
+[[bench]]
+name = "file_conversion"
+harness = false
+
+[[bench]]
+name = "network_performance"
+harness = false
+
+[[bench]]
+name = "concurrent_operations"
+harness = false
+
+# Example binaries
+[[example]]
+name = "simple_sender"
+path = "examples/simple_sender.rs"
+
+[[example]]
+name = "simple_receiver"
+path = "examples/simple_receiver.rs"
+
+[[example]]
+name = "batch_converter"
+path = "examples/batch_converter.rs"
+
+
+
+
+
+

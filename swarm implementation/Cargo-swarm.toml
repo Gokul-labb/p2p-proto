@@ -1,0 +1,41 @@
+[package]
+name = "p2p-swarm-converter"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "P2P file converter with custom libp2p swarm and protocol handler"
+license = "MIT"
+
+[dependencies]
+# Core libp2p with required features
+libp2p = { version = "0.56", features = [
+    "tcp", 
+    "noise", 
+    "yamux", 
+    "swarm", 
+    "identify", 
+    "ping", 
+    "macros"  # Required for NetworkBehaviour derive macro
+] }
+
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Async utilities
+futures = "0.3"
+
+# Optional: For more advanced protocol implementations
+serde = { version = "1.0", features = ["derive"] }
+bincode = "1.3"
+
+[[bin]]
+name = "p2p-swarm"
+path = "swarm_implementation.rs"

@@ -1,0 +1,45 @@
+[package]
+name = "file-converter"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "File conversion library supporting text-to-PDF and PDF-to-text operations"
+license = "MIT"
+
+[dependencies]
+# PDF generation
+genpdf = "0.2"
+
+# PDF text extraction  
+pdf-extract = "0.7"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+
+# File system operations
+std = { version = "1.0", default-features = false }
+
+[dev-dependencies]
+# Testing utilities
+tempfile = "3.0"
+tracing-subscriber = "0.3"
+
+[[example]]
+name = "convert_text_to_pdf"
+path = "examples/text_to_pdf.rs"
+
+[[example]]
+name = "extract_pdf_text"  
+path = "examples/pdf_to_text.rs"
+
+[[example]]
+name = "detect_file_type"
+path = "examples/file_detection.rs"
+
+[features]
+default = ["fonts"]
+fonts = []  # Enable font loading features

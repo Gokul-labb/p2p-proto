@@ -1,0 +1,19 @@
+# P2P File Transfer Configuration
+
+[conversion]
+max_concurrent_transfers = 5
+output_dir = "./received_files"
+auto_convert = true
+return_results = false
+
+[conversion.pdf_config]
+title = "Converted Document"
+margins = 20
+font_size = 12
+line_spacing = 1.2
+font_family = "LiberationSans"
+
+[network]
+max_file_size_mb = 100
+chunk_size_kb = 1024
+transfer_timeout_seconds = 300
